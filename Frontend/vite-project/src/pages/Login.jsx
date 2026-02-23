@@ -17,6 +17,7 @@ const Login = () => {
           password,
         },
       );
+
       localStorage.setItem("token", data.token);
       alert("Login successful");
       navigate("/");
@@ -28,18 +29,21 @@ const Login = () => {
   return (
     <form onSubmit={loginHandler} style={styles.form}>
       <h2>Login</h2>
+
       <input
         type="email"
         placeholder="Email"
         onChange={(e) => setEmail(e.target.value)}
         required
       />
+
       <input
         type="password"
         placeholder="Password"
         onChange={(e) => setPassword(e.target.value)}
         required
       />
+
       <button type="submit">Login</button>
     </form>
   );
