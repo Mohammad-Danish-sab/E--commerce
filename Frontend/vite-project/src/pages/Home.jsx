@@ -9,10 +9,14 @@ const Home = () => {
     fetchProducts();
   }, []);
 
-  const fetchProducts = async () => {
-    const { data } = await axios.get("http://localhost:5000/api/products");
-    setProducts(data);
-  };
+ const fetchProducts = async () => {
+   try {
+     const { data } = await axios.get("http://localhost:5000/api/products");
+     setProducts(data);
+   } catch (error) {
+     console.error("Error fetching products:", error);
+   }
+ };
 
   return (
     <div style={styles.grid}>
