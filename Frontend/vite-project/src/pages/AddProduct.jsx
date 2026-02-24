@@ -45,11 +45,12 @@ const AddProduct = () => {
       formData.append("description", form.description);
       formData.append("image", imageFile);
 
-      await axios.post("http://localhost:5000/api/products", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+    await axios.post("http://localhost:5000/api/products", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "x-admin-key": "danish123", // ⭐ ADD HERE
+      },
+    });
 
       alert("✅ Product added successfully");
       navigate("/");
