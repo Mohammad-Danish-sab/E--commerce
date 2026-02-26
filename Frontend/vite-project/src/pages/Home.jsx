@@ -6,9 +6,14 @@ const Home = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProducts();
-  }, []);
+useEffect(() => {
+  const fetchProducts = async () => {
+    const { data } = await axios.get("http://localhost:5000/api/products");
+    setProducts(data);
+  };
+
+  fetchProducts();
+}, []);
 
   const fetchProducts = async () => {
     try {
@@ -50,6 +55,14 @@ const Home = () => {
         {products.map((p) => (
           <ProductCard key={p._id} product={p} />
         ))}
+
+        {products.length === 0 ? (
+  <p>No products found.</p>
+) : (
+  products.map((product) => (
+    <ProductCard key={product._id} product={product} />
+  ))
+)}
       </div>
     </div>
   );
