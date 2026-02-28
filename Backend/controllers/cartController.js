@@ -2,7 +2,10 @@ import Cart from "../models/Cart.js";
 
 // Add to Cart
 export const addToCart = async (req, res) => {
-  const { productId, quantity } = req.body;
+  const { productId, quantity = 1 } = req.body;
+
+    if (!productId)
+      return res.status(400).json({ message: "Product ID is required" });
 
   try {
     let cart = await Cart.findOne({ userId: req.user.id });
@@ -25,6 +28,9 @@ export const addToCart = async (req, res) => {
 
       await cart.save();
     }
+
+    // Populate product details before returning
+    await cart.populate("items.productId");
 
     res.json(cart);
   } catch (error) {
