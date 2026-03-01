@@ -5,6 +5,7 @@ const productSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
+      trim: true,
     },
     description: {
       type: String,
@@ -13,6 +14,7 @@ const productSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
+      min: 0,
     },
     image: {
       type: String,
@@ -21,6 +23,7 @@ const productSchema = new mongoose.Schema(
     category: {
       type: String,
       default: "general",
+      trim: true,
     },
   },
   { timestamps: true },

@@ -25,7 +25,7 @@ export const placeOrder = async (req, res) => {
       0,
     );
 
-    // ✅ FIX: Store a clean snapshot of products (not just ObjectId refs)
+    // FIX: Store a clean snapshot of products (not just ObjectId refs)
     const products = cart.items.map((item) => ({
       productId: item.productId._id,
       title: item.productId.title,
@@ -65,7 +65,7 @@ export const getSingleOrder = async (req, res) => {
 
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // ✅ Only allow the owner to view the order
+    //  Only allow the owner to view the order
     if (order.userId.toString() !== req.user.id)
       return res.status(403).json({ message: "Not authorized" });
 

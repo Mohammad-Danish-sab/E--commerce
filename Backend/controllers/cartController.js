@@ -44,7 +44,7 @@ export const getUserCart = async (req, res) => {
     const cart = await Cart.findOne({ userId: req.user.id }).populate(
       "items.productId",
     );
-    // ✅ FIX: Return empty cart instead of null
+    // FIX: Return empty cart instead of null
     if (!cart) return res.json({ items: [] });
 
     res.json(cart);
