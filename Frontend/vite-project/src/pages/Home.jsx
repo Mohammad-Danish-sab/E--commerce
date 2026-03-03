@@ -33,11 +33,11 @@ const Home = () => {
     <div style={S.page}>
       {/* Hero */}
       <div style={S.hero}>
-        <p style={S.heroTag}>New Collection 2025</p>
+        <p style={S.heroTag}>Here is New Collection only...</p>
         <h1 style={S.heroTitle}>
-          Discover Premium
+          Discover Premium & Original
           <br />
-          Products
+          Products 
         </h1>
         <p style={S.heroSub}>Handpicked quality items delivered to your door</p>
         <div style={S.searchWrap}>

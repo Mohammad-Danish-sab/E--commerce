@@ -18,8 +18,8 @@ const Navbar = () => {
     <nav style={S.nav}>
       <Link to="/" style={S.logo}>
         <span style={S.star}>✦</span>
-        <span style={S.logoText}>LUXE</span>
-        <span style={S.logoSub}>STORE</span>
+        <span style={S.logoText}>Shop</span>
+        <span style={S.logoSub}>Sphere</span>
       </Link>
 
       <div style={S.links}>
