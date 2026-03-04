@@ -1,18 +1,18 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
-import { useState } from "react";
+import toast from "react-hot-toast";
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
-  const [added, setAdded] = useState(false);
 
   const handleAdd = (e) => {
     e.preventDefault();
     addToCart(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
+    toast.success(product.title + " added to cart!");
+  };
+
   return (
-     <div style={S.card}>
+    <div style={S.card}>
       <Link to={"/product/" + product._id} style={{ display: "block" }}>
         <div style={S.imgWrap}>
           <img
@@ -26,7 +26,6 @@ const ProductCard = ({ product }) => {
           />
         </div>
       </Link>
-
       <div style={S.info}>
         <span style={S.cat}>{product.category || "general"}</span>
         <h3 style={S.title}>{product.title}</h3>
@@ -35,15 +34,8 @@ const ProductCard = ({ product }) => {
           <span style={S.price}>
             Rs.{Number(product.price).toLocaleString()}
           </span>
-          <button
-            onClick={handleAdd}
-            style={
-              added
-                ? { ...S.btn, background: "#2ecc71", color: "#fff" }
-                : S.btn
-            }
-          >
-            {added ? "Added!" : "+ Cart"}
+          <button onClick={handleAdd} style={S.btn}>
+            + Cart
           </button>
         </div>
       </div>
@@ -51,14 +43,12 @@ const ProductCard = ({ product }) => {
   );
 };
 
-
 const S = {
   card: {
     background: "#111118",
     borderRadius: "16px",
     border: "1px solid rgba(255,255,255,0.07)",
     overflow: "hidden",
-    transition: "transform 0.2s",
   },
   imgWrap: { height: "220px", overflow: "hidden" },
   img: { width: "100%", height: "100%", objectFit: "cover", display: "block" },
@@ -69,25 +59,37 @@ const S = {
     gap: "7px",
   },
   cat: {
-    fontSize: "11px", color: "#e8c547",
-    textTransform: "uppercase", letterSpacing: "2px", fontWeight: "600",
+    fontSize: "11px",
+    color: "#e8c547",
+    textTransform: "uppercase",
+    letterSpacing: "2px",
+    fontWeight: "600",
   },
   title: {
     fontFamily: "'Playfair Display', serif",
-    fontSize: "17px", color: "#f0f0f5",
-    fontWeight: "600", lineHeight: "1.3",
+    fontSize: "17px",
+    color: "#f0f0f5",
+    fontWeight: "600",
+    lineHeight: "1.3",
   },
   desc: { fontSize: "13px", color: "#9090a8", lineHeight: "1.5" },
   bottom: {
-    display: "flex", justifyContent: "space-between",
-    alignItems: "center", marginTop: "4px",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: "4px",
   },
   price: { fontSize: "18px", fontWeight: "700", color: "#f0f0f5" },
   btn: {
-    background: "#e8c547", color: "#0a0a0f", border: "none",
-    padding: "8px 14px", borderRadius: "8px",
-    fontWeight: "700", fontSize: "12px", cursor: "pointer",
+    background: "#e8c547",
+    color: "#0a0a0f",
+    border: "none",
+    padding: "8px 14px",
+    borderRadius: "8px",
+    fontWeight: "700",
+    fontSize: "12px",
+    cursor: "pointer",
   },
 };
-}
+
 export default ProductCard;
