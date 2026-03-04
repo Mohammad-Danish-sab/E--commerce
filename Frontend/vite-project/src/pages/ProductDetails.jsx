@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useCart } from "../context/CartContext";
+import toast from "react-hot-toast";
 
 const ProductDetails = () => {
   const { id } = useParams();
@@ -13,27 +14,18 @@ const ProductDetails = () => {
 
   // FIX: Added dependency array [id] and proper error/loading handling
   useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const { data } = await axios.get(
-          "http://localhost:5000/api/products/" + id,
-        );
-        setProduct(data);
-      } catch (error) {
-        console.error("Product not found:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProduct();
+    axios
+      .get("http://localhost:5000/api/products/" + id)
+      .then(({ data }) => setProduct(data))
+      .catch(() => toast.error("Failed to load product."))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  const handleAdd = () => {
-    addToCart(product);
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1500);
-  };
-
+    const handleAdd = () => {
+      addToCart(product);
+      toast.success(product.title + " added to cart!");
+    };
+    
   if (loading) {
     return (
       <div style={S.center}>

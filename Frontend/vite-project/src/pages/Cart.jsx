@@ -2,6 +2,7 @@ import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 const Cart = () => {
   const { cart, removeFromCart, updateQty, clearCart, totalPrice } = useCart();
@@ -11,6 +12,7 @@ const Cart = () => {
   const handleOrder = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
+      toast.error("Please login to place an order.");
       navigate("/login");
       return;
     }
@@ -25,11 +27,18 @@ const Cart = () => {
       alert("Order placed successfully!");
       navigate("/");
     } catch (err) {
-      alert(err.response?.data?.message || "Order failed. Try again.");
+       toast.dismiss(loadingToast);
+       toast.error(err.response?.data?.message || "Order failed try again.");
     } finally {
       setOrdering(false);
     }
   };
+
+    const handleRemove = (item) => {
+      removeFromCart(item._id);
+      toast.success(item.title + " removed.");
+    };
+
 
   if (!cart || cart.length === 0) {
     return (

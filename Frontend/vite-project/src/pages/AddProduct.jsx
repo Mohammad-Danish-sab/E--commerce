@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const AddProduct = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const AddProduct = () => {
       return;
     }
     setLoading(true);
+    const loadingToast = toast.loading("Uploading product...");
     try {
       const token = localStorage.getItem("token");
       const formData = new FormData();
@@ -51,9 +53,12 @@ const AddProduct = () => {
           "x-admin-key": "danish123",
         },
       });
+      toast.dismiss(loadingToast);
+      toast.success("Product added successfully!");
       navigate("/");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to add product.");
+      toast.dismiss(loadingToast);
+      toast.error(err.response?.data?.message || "Failed to add product.");
     } finally {
       setLoading(false);
     }

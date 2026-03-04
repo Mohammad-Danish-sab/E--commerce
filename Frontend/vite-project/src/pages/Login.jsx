@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
+import toast from "react-hot-toast";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -11,7 +12,7 @@ const Login = () => {
 
   const loginHandler = async (e) => {
     e.preventDefault();
-    setError("");
+    // setError("");
     setLoading(true);
     try {
       const { data } = await axios.post(
@@ -21,6 +22,7 @@ const Login = () => {
       // FIX: Save both token AND user object (original only saved token)
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
+      toast.success("Welcome back, " + data.user.name + "!");
       navigate("/");
     } catch (err) {
       setError(
