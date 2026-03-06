@@ -6,6 +6,7 @@ import { CartProvider } from "./context/CartContext.jsx";
 import { Toaster } from "react-hot-toast";
 import "./index.css";
 
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <BrowserRouter>
