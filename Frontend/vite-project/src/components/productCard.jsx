@@ -1,15 +1,28 @@
 import { Link } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import toast from "react-hot-toast";
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+  const wishlisted = isWishlisted(product._id);
 
   const handleAdd = (e) => {
     e.preventDefault();
     addToCart(product);
     toast.success(product.title + " added to cart!");
   };
+
+   const handleHeart = (e) => {
+     e.preventDefault();
+     toggleWishlist(product);
+     toast.success(
+       wishlisted
+         ? product.title + " removed from wishlist."
+         : product.title + " saved to wishlist! ❤️",
+     );
+   };
 
   return (
     <div style={S.card}>
