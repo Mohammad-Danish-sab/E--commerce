@@ -1,13 +1,17 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import toast from "react-hot-toast";
 
 const Navbar = () => {
   const { cart } = useCart();
+  const { wishlist } = useWishlist();
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "null");
   const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
+  const wishlistCount = wishlist.length;
+  
 
   const handleLogout = () => {
     localStorage.removeItem("token");

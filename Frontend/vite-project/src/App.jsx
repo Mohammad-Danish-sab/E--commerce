@@ -7,6 +7,10 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import AddProduct from "./pages/AddProduct";
 import NotFound from "./pages/NotFound";
+import Orders from "./pages/Orders";
+import Profile from "./pages/Profile";
+import Wishlist from "./pages/Wishlist";
+
 
 import Skeleton from "./components/Skeleton";
 
@@ -23,6 +27,10 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/add-product" element={<AddProduct />} />
+        <Route path="/orders" element={<Orders />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </>
   );
