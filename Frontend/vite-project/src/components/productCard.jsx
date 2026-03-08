@@ -37,6 +37,17 @@ const ProductCard = ({ product }) => {
                 "https://placehold.co/400x280/1a1a24/9090a8?text=No+Image";
             }}
           />
+          <button
+            onClick={handleHeart}
+            style={{
+              ...S.heartBtn,
+              background: wishlisted
+                ? "rgba(232,197,71,0.9)"
+                : "rgba(10,10,15,0.75)",
+            }}
+          >
+            {wishlisted ? "❤️" : "🤍"}
+          </button>
         </div>
       </Link>
       <div style={S.info}>

@@ -36,6 +36,15 @@ const Navbar = () => {
           Add Product
         </Link>
 
+        <Link to="/wishlist" style={S.iconWrap}>
+          <span style={{ fontSize: "20px" }}>🤍</span>
+          {wishlistCount > 0 && (
+            <span style={{ ...S.badge, background: "#ff4d6d" }}>
+              {wishlistCount}
+            </span>
+          )}
+        </Link>
+
         <Link to="/cart" style={S.cartWrap}>
           <span style={{ fontSize: "20px" }}>🛒</span>
           {totalItems > 0 && <span style={S.badge}>{totalItems}</span>}
