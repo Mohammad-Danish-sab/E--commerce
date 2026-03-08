@@ -4,10 +4,53 @@ import axios from "axios";
 import { useState } from "react";
 import toast from "react-hot-toast";
 
+const COUPONS = {
+  LUXE10: { type: "percent", value: 10, label: "10% off" },
+  LUXE20: { type: "percent", value: 20, label: "20% off" },
+  FLAT200: { type: "flat", value: 200, label: "Rs.200 off" },
+  FLAT500: { type: "flat", value: 500, label: "Rs.500 off" },
+  NEWUSER: { type: "percent", value: 15, label: "15% off" },
+};
+
 const Cart = () => {
   const { cart, removeFromCart, updateQty, clearCart, totalPrice } = useCart();
   const navigate = useNavigate();
   const [ordering, setOrdering] = useState(false);
+   const [couponInput, setCouponInput] = useState("");
+   const [appliedCoupon, setApplied] = useState(null);
+   const [couponError, setCouponError] = useState("");
+
+
+  const handleApplyCoupon = () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) {
+      setCouponError("Please enter a coupon code.");
+      return;
+    }
+    const coupon = COUPONS[code];
+    if (!coupon) {
+      setCouponError("Invalid coupon code.");
+      setApplied(null);
+      return;
+    }
+    setApplied({ code, ...coupon });
+    setCouponError("");
+    toast.success(`"${code}" applied — ${coupon.label}! 🎉`);
+  };
+
+  const handleRemoveCoupon = () => {
+    setApplied(null);
+    setCouponInput("");
+    setCouponError("");
+    toast.success("Coupon removed.");
+  };
+
+    const discount = !appliedCoupon
+      ? 0
+      : appliedCoupon.type === "percent"
+        ? Math.round((totalPrice * appliedCoupon.value) / 100)
+        : Math.min(appliedCoupon.value, totalPrice);
+    const finalTotal = Math.max(0, totalPrice - discount);
 
   const handleOrder = async () => {
     const token = localStorage.getItem("token");
@@ -17,15 +60,16 @@ const Cart = () => {
       return;
     }
     setOrdering(true);
+    const loadingToast = toast.loading("Placing your order…");
     try {
       await axios.post(
         "http://localhost:5000/api/orders",
-        {},
+        { couponCode: appliedCoupon?.code, discount, finalTotal },
         { headers: { Authorization: "Bearer " + token } },
       );
       clearCart();
       alert("Order placed successfully!");
-      navigate("/");
+      navigate("/orders");
     } catch (err) {
        toast.dismiss(loadingToast);
        toast.error(err.response?.data?.message || "Order failed try again.");
@@ -53,85 +97,104 @@ const Cart = () => {
     );
   }
 
-  return (
+ return (
     <div style={S.page}>
       <h1 style={S.heading}>Your Cart</h1>
-      <p style={S.subheading}>
-        {cart.length} item{cart.length > 1 ? "s" : ""}
-      </p>
-
+      <p style={{ color:"#9090a8", marginBottom:"36px" }}>{cart.length} item{cart.length>1?"s":""}</p>
       <div style={S.layout}>
-        {/* Cart Items */}
-        <div style={S.items}>
+
+        {/* Items */}
+        <div style={{ display:"flex", flexDirection:"column", gap:"14px" }}>
           {cart.map((item) => (
             <div key={item._id} style={S.item}>
-              <img
-                src={item.image}
-                alt={item.title}
-                style={S.itemImg}
-                onError={(e) => {
-                  e.target.src =
-                    "https://placehold.co/85x85/1a1a24/9090a8?text=?";
-                }}
-              />
-              <div style={S.itemInfo}>
-                <span style={S.itemCat}>{item.category || "general"}</span>
-                <h3 style={S.itemTitle}>{item.title}</h3>
-                <p style={S.itemPrice}>
-                  Rs.{Number(item.price).toLocaleString()}
-                </p>
+              <img src={item.image} alt={item.title} style={S.itemImg}
+                onError={(e)=>{e.target.src="https://placehold.co/85x85/1a1a24/9090a8?text=?";}} />
+              <div style={{ flex:1 }}>
+                <span style={{ fontSize:"11px", color:"#e8c547", textTransform:"uppercase", letterSpacing:"2px", fontWeight:"600" }}>{item.category||"general"}</span>
+                <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"16px", color:"#f0f0f5", margin:"4px 0 6px" }}>{item.title}</h3>
+                <p style={{ fontSize:"15px", color:"#9090a8" }}>Rs.{Number(item.price).toLocaleString()}</p>
               </div>
-              <div style={S.itemActions}>
-                {/* Quantity controls */}
-                <div style={S.qtyRow}>
-                  <button
-                    onClick={() => updateQty(item._id, item.qty - 1)}
-                    disabled={item.qty <= 1}
-                    style={S.qtyBtn}
-                  >
-                    −
-                  </button>
-                  <span style={S.qtyNum}>{item.qty}</span>
-                  <button
-                    onClick={() => updateQty(item._id, item.qty + 1)}
-                    style={S.qtyBtn}
-                  >
-                    +
-                  </button>
+              <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:"8px" }}>
+                <div style={{ display:"flex", alignItems:"center", gap:"8px", background:"#1a1a24", borderRadius:"8px", padding:"4px 8px" }}>
+                  <button onClick={()=>updateQty(item._id,item.qty-1)} disabled={item.qty<=1} style={{ background:"none", border:"none", color:"#f0f0f5", fontSize:"18px", cursor:"pointer", width:"28px" }}>−</button>
+                  <span style={{ color:"#f0f0f5", fontWeight:"600", minWidth:"20px", textAlign:"center" }}>{item.qty}</span>
+                  <button onClick={()=>updateQty(item._id,item.qty+1)} style={{ background:"none", border:"none", color:"#f0f0f5", fontSize:"18px", cursor:"pointer", width:"28px" }}>+</button>
                 </div>
-                <button
-                  onClick={() => removeFromCart(item._id)}
-                  style={S.removeBtn}
-                >
-                  Remove
-                </button>
+                <p style={{ fontSize:"15px", fontWeight:"700", color:"#f0f0f5" }}>Rs.{Number(item.price*item.qty).toLocaleString()}</p>
+                <button onClick={()=>{removeFromCart(item._id);toast.success(item.title+" removed.");}}
+                  style={{ background:"rgba(255,77,109,0.1)", color:"#ff4d6d", border:"1px solid rgba(255,77,109,0.2)", padding:"5px 12px", borderRadius:"8px", fontSize:"12px", cursor:"pointer" }}>Remove</button>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Order Summary */}
+        {/* Summary */}
         <div style={S.summary}>
-          <h3 style={S.summaryTitle}>Order Summary</h3>
-          {cart.map((item) => (
-            <div key={item._id} style={S.summaryRow}>
-              <span style={S.summaryLabel}>
-                {(item.title || "").slice(0, 20)}... ×{item.qty}
-              </span>
-              <span style={S.summaryVal}>
-                Rs.{(item.price * item.qty).toLocaleString()}
-              </span>
+          <h3 style={{ fontFamily:"'Playfair Display',serif", fontSize:"20px", color:"#f0f0f5", marginBottom:"20px" }}>Order Summary</h3>
+          {cart.map((item)=>(
+            <div key={item._id} style={{ display:"flex", justifyContent:"space-between", marginBottom:"10px", fontSize:"13px" }}>
+              <span style={{ color:"#9090a8" }}>{(item.title||"").slice(0,18)}… ×{item.qty}</span>
+              <span style={{ color:"#f0f0f5" }}>Rs.{Number(item.price*item.qty).toLocaleString()}</span>
             </div>
           ))}
-          <div style={S.divider}></div>
-          <div style={S.totalRow}>
-            <span style={S.totalLabel}>Total</span>
-            <span style={S.totalVal}>Rs.{totalPrice.toLocaleString()}</span>
+          <div style={{ height:"1px", background:"rgba(255,255,255,0.07)", margin:"16px 0" }}></div>
+          <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"16px", fontSize:"13px" }}>
+            <span style={{ color:"#9090a8" }}>Subtotal</span>
+            <span style={{ color:"#f0f0f5" }}>Rs.{totalPrice.toLocaleString()}</span>
           </div>
-          <button onClick={handleOrder} disabled={ordering} style={S.orderBtn}>
-            {ordering ? "Placing Order..." : "Place Order"}
+
+          {/* Coupon */}
+          <div style={{ marginBottom:"8px" }}>
+            <p style={{ fontSize:"13px", color:"#9090a8", marginBottom:"10px", fontWeight:"500" }}>Have a coupon?</p>
+            {appliedCoupon ? (
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", background:"rgba(104,211,145,0.08)", border:"1px solid rgba(104,211,145,0.2)", borderRadius:"8px", padding:"10px 14px" }}>
+                <span style={{ fontSize:"13px", color:"#f0f0f5" }}>🏷️ {appliedCoupon.code} <span style={{ color:"#68d391", fontWeight:"600" }}>−{appliedCoupon.label}</span></span>
+                <button onClick={handleRemoveCoupon} style={{ background:"none", border:"none", color:"#ff4d6d", fontSize:"12px", cursor:"pointer" }}>✕ Remove</button>
+              </div>
+            ) : (
+              <>
+                <div style={{ display:"flex", gap:"8px" }}>
+                  <input value={couponInput} onChange={(e)=>{setCouponInput(e.target.value);setCouponError("");}}
+                    onKeyDown={(e)=>e.key==="Enter"&&handleApplyCoupon()}
+                    placeholder="e.g. LUXE10"
+                    style={{ flex:1, background:"#1a1a24", border:"1px solid rgba(255,255,255,0.08)", borderRadius:"8px", padding:"10px 12px", color:"#f0f0f5", fontSize:"13px", outline:"none", fontFamily:"'DM Sans',sans-serif" }} />
+                  <button onClick={handleApplyCoupon}
+                    style={{ background:"rgba(232,197,71,0.15)", color:"#e8c547", border:"1px solid rgba(232,197,71,0.3)", padding:"10px 16px", borderRadius:"8px", fontSize:"13px", fontWeight:"600", cursor:"pointer" }}>Apply</button>
+                </div>
+                {couponError && <p style={{ color:"#ff4d6d", fontSize:"12px", marginTop:"6px" }}>{couponError}</p>}
+                <p style={{ color:"#9090a8", fontSize:"11px", marginTop:"6px" }}>Try: LUXE10, LUXE20, FLAT200, FLAT500, NEWUSER</p>
+              </>
+            )}
+          </div>
+
+          {discount > 0 && (
+            <div style={{ display:"flex", justifyContent:"space-between", marginBottom:"6px", fontSize:"13px" }}>
+              <span style={{ color:"#68d391" }}>Discount ({appliedCoupon.code})</span>
+              <span style={{ color:"#68d391", fontWeight:"600" }}>− Rs.{discount.toLocaleString()}</span>
+            </div>
+          )}
+
+          <div style={{ height:"1px", background:"rgba(255,255,255,0.07)", margin:"16px 0" }}></div>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"16px" }}>
+            <span style={{ color:"#f0f0f5", fontWeight:"600", fontSize:"16px" }}>Total</span>
+            <div style={{ textAlign:"right" }}>
+              {discount > 0 && <p style={{ color:"#9090a8", fontSize:"13px", textDecoration:"line-through" }}>Rs.{totalPrice.toLocaleString()}</p>}
+              <span style={{ fontFamily:"'Playfair Display',serif", fontSize:"22px", fontWeight:"700", color:"#e8c547" }}>Rs.{finalTotal.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {discount > 0 && (
+            <div style={{ background:"rgba(104,211,145,0.08)", border:"1px solid rgba(104,211,145,0.2)", borderRadius:"8px", padding:"10px 14px", fontSize:"13px", color:"#68d391", marginBottom:"16px", textAlign:"center" }}>
+              🎉 You're saving <strong>Rs.{discount.toLocaleString()}</strong>!
+            </div>
+          )}
+
+          <button onClick={handleOrder} disabled={ordering}
+            style={{ background:"#e8c547", color:"#0a0a0f", border:"none", padding:"13px", borderRadius:"10px", fontWeight:"700", fontSize:"14px", width:"100%", cursor:"pointer", marginBottom:"10px" }}>
+            {ordering ? "Placing Order…" : "Place Order"}
           </button>
-          <button onClick={() => navigate("/")} style={S.continueBtn}>
+          <button onClick={()=>navigate("/")}
+            style={{ background:"transparent", color:"#9090a8", border:"1px solid rgba(255,255,255,0.1)", padding:"11px", borderRadius:"10px", fontSize:"13px", width:"100%", cursor:"pointer" }}>
             Continue Shopping
           </button>
         </div>
@@ -139,7 +202,6 @@ const Cart = () => {
     </div>
   );
 };
-
 const S = {
   page: { maxWidth: "960px", margin: "0 auto", padding: "40px 24px" },
   heading: {

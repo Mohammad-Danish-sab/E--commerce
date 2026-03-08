@@ -1,5 +1,4 @@
 import { createContext, useContext, useState, useEffect } from "react";
-
 const WishlistContext = createContext();
 
 export const WishlistProvider = ({ children }) => {
@@ -15,17 +14,15 @@ export const WishlistProvider = ({ children }) => {
     localStorage.setItem("wishlist", JSON.stringify(wishlist));
   }, [wishlist]);
 
-  const addToWishlist = (product) =>
+  const addToWishlist = (p) =>
     setWishlist((prev) =>
-      prev.find((p) => p._id === product._id) ? prev : [...prev, product],
+      prev.find((x) => x._id === p._id) ? prev : [...prev, p],
     );
   const removeFromWishlist = (id) =>
     setWishlist((prev) => prev.filter((p) => p._id !== id));
   const isWishlisted = (id) => wishlist.some((p) => p._id === id);
-  const toggleWishlist = (product) =>
-    isWishlisted(product._id)
-      ? removeFromWishlist(product._id)
-      : addToWishlist(product);
+  const toggleWishlist = (p) =>
+    isWishlisted(p._id) ? removeFromWishlist(p._id) : addToWishlist(p);
 
   return (
     <WishlistContext.Provider

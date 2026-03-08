@@ -11,15 +11,10 @@ import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
 
-
-import Skeleton from "./components/Skeleton";
-
 function App() {
   return (
     <>
       <Navbar />
-      {/* Example usage of Skeleton component */}
-      {/* <Skeleton /> */}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/product/:id" element={<ProductDetails />} />
