@@ -1,5 +1,6 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import BackToTop from "./components/BackToTop";
 import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
@@ -10,6 +11,9 @@ import NotFound from "./pages/NotFound";
 import Orders from "./pages/Orders";
 import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
+import AdminDashboard from "./pages/AdminDashboard";
+import OrderTracking from "./pages/OrderTracking";
+
 
 function App() {
   return (
@@ -23,10 +27,13 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/add-product" element={<AddProduct />} />
         <Route path="/orders" element={<Orders />} />
+        <Route path="/orders/:id/track" element={<OrderTracking />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/wishlist" element={<Wishlist />} />
+        <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
+      <BackToTop />
     </>
   );
 }
