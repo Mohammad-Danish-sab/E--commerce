@@ -5,6 +5,28 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import toast from "react-hot-toast";
 
+const RECENTLY_VIEWED_KEY = "recently_viewed";
+
+const saveRecentlyViewed = (product) => {
+  try {
+    const existing = JSON.parse(
+      localStorage.getItem(RECENTLY_VIEWED_KEY) || "[]",
+    );
+    const filtered = existing.filter((p) => p._id !== product._id);
+    const updated = [
+      {
+        _id: product._id,
+        title: product.title,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+      },
+      ...filtered,
+    ].slice(0, 8);
+    localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(updated));
+  } catch {}
+};
+
 const StarRating = ({ value, onChange, readOnly = false, size = 24 }) => {
   const [hover, setHover] = useState(0);
   return (
@@ -26,6 +48,148 @@ const StarRating = ({ value, onChange, readOnly = false, size = 24 }) => {
           ★
         </span>
       ))}
+    </div>
+  );
+};
+
+const ImageGallery = ({ images = [], title = "" }) => {
+  const [active, setActive] = useState(0);
+  const [zoomed, setZoomed] = useState(false);
+  const allImages = images.length > 0 ? images : [null];
+
+  return (
+    <div>
+      {/* Main image */}
+      <div
+        style={{
+          borderRadius: "20px",
+          overflow: "hidden",
+          background: "#111118",
+          position: "relative",
+          cursor: "zoom-in",
+          aspectRatio: "1/1",
+        }}
+        onClick={() => setZoomed(true)}
+      >
+        <img
+          src={allImages[active]}
+          alt={title}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            display: "block",
+          }}
+          onError={(e) => {
+            e.target.src =
+              "https://placehold.co/600x600/1a1a24/9090a8?text=No+Image";
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            bottom: "12px",
+            right: "12px",
+            background: "rgba(0,0,0,0.5)",
+            borderRadius: "8px",
+            padding: "5px 10px",
+            fontSize: "12px",
+            color: "#f0f0f5",
+          }}
+        >
+          🔍 Click to zoom
+        </div>
+      </div>
+
+      {/* Thumbnails */}
+      {allImages.length > 1 && (
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+            marginTop: "12px",
+            overflowX: "auto",
+          }}
+        >
+          {allImages.map((img, i) => (
+            <div
+              key={i}
+              onClick={() => setActive(i)}
+              style={{
+                width: "72px",
+                height: "72px",
+                borderRadius: "10px",
+                overflow: "hidden",
+                flexShrink: 0,
+                cursor: "pointer",
+                border:
+                  active === i ? "2px solid #e8c547" : "2px solid transparent",
+                transition: "border 0.2s",
+              }}
+            >
+              <img
+                src={img}
+                alt={`${title} ${i + 1}`}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                onError={(e) => {
+                  e.target.src =
+                    "https://placehold.co/72x72/1a1a24/9090a8?text=?";
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Zoom lightbox */}
+      {zoomed && (
+        <div
+          onClick={() => setZoomed(false)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.92)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            cursor: "zoom-out",
+          }}
+        >
+          <img
+            src={allImages[active]}
+            alt={title}
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              borderRadius: "12px",
+            }}
+            onError={(e) => {
+              e.target.src =
+                "https://placehold.co/800x800/1a1a24/9090a8?text=No+Image";
+            }}
+          />
+          <button
+            onClick={() => setZoomed(false)}
+            style={{
+              position: "absolute",
+              top: "20px",
+              right: "20px",
+              background: "rgba(255,255,255,0.1)",
+              border: "none",
+              color: "#f0f0f5",
+              fontSize: "24px",
+              width: "44px",
+              height: "44px",
+              borderRadius: "50%",
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </div>
   );
 };
