@@ -1,11 +1,13 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import axios from "axios";
-import ProductCard from "../components/productCard.jsx";
-import SkeletonCard from "../components/SkeletonCard.jsx";
-import useDebounce from "../hooks/useDebounce.js";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import toast from "react-hot-toast";
+import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
+import SkeletonCard from "../components/SkeletonCard";
 
+const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const PAGE_SIZE = 12;
 const CATEGORIES = [
   "All",
   "Electronics",
@@ -15,52 +17,53 @@ const CATEGORIES = [
   "Accessories",
   "General",
 ];
-const SORT_OPTIONS = [
-  { label: "Newest First", value: "newest" },
-  { label: "Price: Low → High", value: "price_asc" },
-  { label: "Price: High → Low", value: "price_desc" },
-];
-const PAGE_SIZE = 12;
+
+const useDebounce = (value, delay = 400) => {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+};
 
 const Home = () => {
-  const [allProducts, setAllProducts] = useState([]);
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
+
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("newest");
-  const [page, setPage] = useState(1);
-  const [isSearching, setIsSearching] = useState(false);
-  const navigate = useNavigate();
-  const loaderRef = useRef(null);
-
+  const [visibleCount, setVisible] = useState(PAGE_SIZE);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef(null);
   const debouncedSearch = useDebounce(search, 400);
 
   useEffect(() => {
-    setIsSearching(search !== debouncedSearch);
-  }, [search, debouncedSearch]);
-
-  useEffect(() => {
     axios
-      .get("http://localhost:5000/api/products")
-      .then(({ data }) => setAllProducts(data))
+      .get(`${API}/products`)
+      .then(({ data }) => setProducts(data))
       .catch(() => toast.error("Failed to load products."))
       .finally(() => setLoading(false));
   }, []);
 
+  // Reset page on filter change
   useEffect(() => {
-    setPage(1);
+    setVisible(PAGE_SIZE);
   }, [debouncedSearch, category, sort]);
 
-  const filtered = allProducts
+  const filtered = products
     .filter((p) => {
       const matchSearch = p.title
         ?.toLowerCase()
         .includes(debouncedSearch.toLowerCase());
-      const matchCategory =
+      const matchCat =
         category === "All" ||
         p.category?.toLowerCase() === category.toLowerCase();
-      return matchSearch && matchCategory;
+      return matchSearch && matchCat;
     })
     .sort((a, b) => {
       if (sort === "price_asc") return a.price - b.price;
@@ -68,384 +71,513 @@ const Home = () => {
       return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
-  const visible = filtered.slice(0, page * PAGE_SIZE);
-  const hasMore = visible.length < filtered.length;
+  const visible = filtered.slice(0, visibleCount);
 
-  const handleObserver = useCallback(
-    (entries) => {
-      if (entries[0].isIntersecting && hasMore && !loadingMore) {
-        setLoadingMore(true);
-        setTimeout(() => {
-          setPage((p) => p + 1);
-          setLoadingMore(false);
-        }, 500);
-      }
-    },
-    [hasMore, loadingMore],
-  );
+  // Infinite scroll
+  const loadMore = useCallback(() => {
+    if (visibleCount >= filtered.length) return;
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisible((v) => v + PAGE_SIZE);
+      setLoadingMore(false);
+    }, 500);
+  }, [visibleCount, filtered.length]);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(handleObserver, {
-      threshold: 0.1,
-    });
-    if (loaderRef.current) observer.observe(loaderRef.current);
-    return () => observer.disconnect();
-  }, [handleObserver]);
+    const el = sentinelRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) loadMore();
+      },
+      { threshold: 0.1 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [loadMore]);
 
   return (
-    <div style={S.page}>
+    <div
+      style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 24px 80px" }}
+    >
       {/* Hero */}
-      <div style={S.hero}>
-        <p style={S.heroTag}>New Collection 2025</p>
-        <h1 style={S.heroTitle}>
-          Discover Premium
-          <br />
-          Products
+      <div
+        style={{
+          textAlign: "center",
+          padding: "80px 24px 48px",
+          background:
+            "radial-gradient(ellipse 60% 40% at 50% 0%, rgba(232,197,71,0.06), transparent 70%)",
+        }}
+      >
+        <p
+          style={{
+            fontSize: "11px",
+            color: "#e8c547",
+            letterSpacing: "3px",
+            textTransform: "uppercase",
+            fontWeight: "600",
+            background: "rgba(232,197,71,0.1)",
+            padding: "6px 18px",
+            borderRadius: "20px",
+            display: "inline-block",
+            marginBottom: "20px",
+          }}
+        >
+          New Collection 2025
+        </p>
+        <h1
+          style={{
+            fontFamily: "'Playfair Display',serif",
+            fontSize: "clamp(36px,7vw,72px)",
+            color: "#f0f0f5",
+            lineHeight: 1.1,
+            marginBottom: "16px",
+          }}
+        >
+          Discover <span style={{ color: "#e8c547" }}>Premium</span> Products
         </h1>
-        <p style={S.heroSub}>Handpicked quality items delivered to your door</p>
-        <div style={S.searchWrap}>
-          <span style={S.searchIcon}>🔍</span>
+        <p style={{ color: "#9090a8", fontSize: "16px", marginBottom: "36px" }}>
+          Handpicked quality items delivered to your door
+        </p>
+
+        {/* Search */}
+        <div
+          style={{ position: "relative", maxWidth: "520px", margin: "0 auto" }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              left: "16px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              fontSize: "18px",
+              pointerEvents: "none",
+            }}
+          >
+            🔍
+          </span>
           <input
-            placeholder="Search products…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            style={S.searchInput}
+            placeholder="Search products…"
+            style={{
+              width: "100%",
+              padding: "14px 48px",
+              background: "#111118",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "50px",
+              fontSize: "15px",
+              color: "#f0f0f5",
+              fontFamily: "'DM Sans',sans-serif",
+              outline: "none",
+              boxSizing: "border-box",
+              transition: "border-color 0.2s",
+            }}
+            onFocus={(e) =>
+              (e.target.style.borderColor = "rgba(232,197,71,0.4)")
+            }
+            onBlur={(e) =>
+              (e.target.style.borderColor = "rgba(255,255,255,0.08)")
+            }
           />
-          {isSearching && <span style={S.searchSpinner}></span>}
           {search && (
-            <button onClick={() => setSearch("")} style={S.clearX}>
+            <button
+              onClick={() => setSearch("")}
+              style={{
+                position: "absolute",
+                right: "14px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                color: "#9090a8",
+                cursor: "pointer",
+                fontSize: "18px",
+              }}
+            >
               ✕
             </button>
           )}
         </div>
-        {debouncedSearch && !isSearching && (
-          <p style={S.searchHint}>
+        {debouncedSearch && (
+          <p style={{ color: "#9090a8", fontSize: "13px", marginTop: "10px" }}>
             Showing results for{" "}
             <strong style={{ color: "#e8c547" }}>"{debouncedSearch}"</strong>
           </p>
         )}
       </div>
 
-      {/* Category Filter */}
-      <div style={S.filterRow}>
+      {/* Category filters */}
+      <div
+        style={{
+          display: "flex",
+          gap: "8px",
+          flexWrap: "wrap",
+          marginBottom: "28px",
+        }}
+      >
         {CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            style={
-              category === cat
-                ? { ...S.filterBtn, ...S.filterBtnActive }
-                : S.filterBtn
-            }
+            style={{
+              padding: "8px 20px",
+              borderRadius: "50px",
+              border: `1px solid ${category === cat ? "#e8c547" : "rgba(255,255,255,0.08)"}`,
+              background: category === cat ? "#e8c547" : "transparent",
+              color: category === cat ? "#0a0a0f" : "#9090a8",
+              fontSize: "13px",
+              fontWeight: category === cat ? "700" : "500",
+              cursor: "pointer",
+              fontFamily: "'DM Sans',sans-serif",
+              transition: "all 0.2s",
+            }}
           >
             {cat}
           </button>
         ))}
       </div>
 
-      {/* Header */}
-      <div style={S.headerRow}>
+      {/* Header row */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          marginBottom: "24px",
+        }}
+      >
         <div>
-          <h2 style={S.sectionTitle}>
+          <h2
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: "26px",
+              color: "#f0f0f5",
+            }}
+          >
             {category === "All" ? "All Products" : category}
           </h2>
-          <p style={S.sectionSub}>
+          <p style={{ color: "#9090a8", fontSize: "13px", marginTop: "4px" }}>
             {loading
               ? "Loading…"
-              : isSearching
-                ? "Searching…"
-                : `${filtered.length} item${filtered.length !== 1 ? "s" : ""} found`}
+              : `${filtered.length} item${filtered.length !== 1 ? "s" : ""} found`}
           </p>
         </div>
-        <div style={S.rightRow}>
-          <select
-            value={sort}
-            onChange={(e) => setSort(e.target.value)}
-            style={S.sortSelect}
-          >
-            {SORT_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-          <button style={S.uploadBtn} onClick={() => navigate("/add-product")}>
-            + Add Product
-          </button>
-        </div>
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          style={{
+            background: "#111118",
+            border: "1px solid rgba(255,255,255,0.08)",
+            color: "#f0f0f5",
+            padding: "10px 16px",
+            borderRadius: "10px",
+            fontSize: "13px",
+            cursor: "pointer",
+            outline: "none",
+            fontFamily: "'DM Sans',sans-serif",
+          }}
+        >
+          <option value="newest">Newest First</option>
+          <option value="price_asc">Price: Low → High</option>
+          <option value="price_desc">Price: High → Low</option>
+        </select>
       </div>
 
-      {/* Skeleton */}
-      {loading && (
-        <div style={S.grid}>
-          {Array(PAGE_SIZE)
+      {/* Grid */}
+      {loading ? (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))",
+            gap: "24px",
+          }}
+        >
+          {Array(8)
             .fill(0)
             .map((_, i) => (
               <SkeletonCard key={i} />
             ))}
         </div>
-      )}
-
-      {/* Empty */}
-      {!loading && filtered.length === 0 && (
-        <div style={S.emptyWrap}>
-          <p style={{ fontSize: "56px" }}>📦</p>
-          <h3 style={S.emptyTitle}>No products found</h3>
-          <p style={S.emptySub}>
+      ) : filtered.length === 0 ? (
+        <div style={{ textAlign: "center", padding: "80px 20px" }}>
+          <p style={{ fontSize: "56px", marginBottom: "16px" }}>📦</p>
+          <h3
+            style={{
+              fontFamily: "'Playfair Display',serif",
+              fontSize: "24px",
+              color: "#f0f0f5",
+              marginBottom: "8px",
+            }}
+          >
+            No products found
+          </h3>
+          <p style={{ color: "#9090a8", marginBottom: "24px" }}>
             {debouncedSearch
               ? `No results for "${debouncedSearch}"`
-              : `No products in "${category}"`}
+              : "Nothing in this category yet."}
           </p>
-          {(debouncedSearch || category !== "All") && (
-            <button
-              style={S.clearBtn}
-              onClick={() => {
-                setSearch("");
-                setCategory("All");
+          <button
+            onClick={() => {
+              setSearch("");
+              setCategory("All");
+            }}
+            style={{
+              background: "transparent",
+              border: "1px solid rgba(232,197,71,0.4)",
+              color: "#e8c547",
+              padding: "10px 24px",
+              borderRadius: "10px",
+              fontSize: "14px",
+              cursor: "pointer",
+            }}
+          >
+            Clear Filters
+          </button>
+        </div>
+      ) : (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))",
+            gap: "24px",
+          }}
+        >
+          {visible.map((p) => (
+            <ProductCard
+              key={p._id}
+              product={p}
+              wishlisted={isWishlisted(p._id)}
+              onWishlist={() => {
+                toggleWishlist(p);
+                toast.success(
+                  isWishlisted(p._id)
+                    ? "Removed from wishlist."
+                    : p.title + " saved! ❤️",
+                );
               }}
-            >
-              Clear Filters
-            </button>
-          )}
+              onAddCart={() => {
+                addToCart(p);
+                toast.success(p.title + " added to cart!");
+              }}
+              onView={() => navigate("/product/" + p._id)}
+            />
+          ))}
         </div>
       )}
 
-      {/* Grid */}
-      {!loading && visible.length > 0 && (
+      {/* Infinite scroll sentinel */}
+      {!loading && visibleCount < filtered.length && (
         <>
-          <div style={S.grid}>
-            {visible.map((p) => (
-              <ProductCard key={p._id} product={p} />
-            ))}
-          </div>
-          <div
-            ref={loaderRef}
-            style={{
-              height: "40px",
-              marginTop: "24px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            {loadingMore && (
+          <div ref={sentinelRef} style={{ height: "40px" }} />
+          {loadingMore && (
+            <div style={{ textAlign: "center", padding: "20px" }}>
               <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                <div style={S.spinner}></div>
-                <span style={{ color: "#9090a8", fontSize: "14px" }}>
-                  Loading more…
-                </span>
-              </div>
-            )}
-            {!loadingMore && hasMore && (
-              <button
-                style={S.loadMoreBtn}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Load More ({filtered.length - visible.length} remaining)
-              </button>
-            )}
-          </div>
-          {!hasMore && filtered.length > PAGE_SIZE && (
-            <p style={S.endText}>
-              ✦ You've seen all {filtered.length} products ✦
-            </p>
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  border: "3px solid rgba(255,255,255,0.1)",
+                  borderTop: "3px solid #e8c547",
+                  borderRadius: "50%",
+                  animation: "spin 0.8s linear infinite",
+                  margin: "0 auto",
+                }}
+              />
+            </div>
           )}
+          <div style={{ textAlign: "center", marginTop: "16px" }}>
+            <button
+              onClick={loadMore}
+              style={{
+                background: "transparent",
+                border: "1px solid rgba(232,197,71,0.35)",
+                color: "#e8c547",
+                padding: "12px 32px",
+                borderRadius: "10px",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                fontFamily: "'DM Sans',sans-serif",
+              }}
+            >
+              Load More ({filtered.length - visibleCount} remaining)
+            </button>
+          </div>
         </>
       )}
-
+      {!loading &&
+        visibleCount >= filtered.length &&
+        filtered.length > PAGE_SIZE && (
+          <p
+            style={{
+              textAlign: "center",
+              color: "#9090a8",
+              fontSize: "13px",
+              marginTop: "36px",
+              letterSpacing: "2px",
+            }}
+          >
+            ✦ You've seen all {filtered.length} products ✦
+          </p>
+        )}
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 };
 
-const S = {
-  page: { maxWidth: "1280px", margin: "0 auto", padding: "0 24px 80px" },
-  hero: {
-    textAlign: "center",
-    padding: "80px 20px 48px",
-    borderBottom: "1px solid rgba(255,255,255,0.06)",
-    marginBottom: "36px",
-  },
-  heroTag: {
-    display: "inline-block",
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#e8c547",
-    letterSpacing: "3px",
-    textTransform: "uppercase",
-    background: "rgba(232,197,71,0.1)",
-    padding: "6px 16px",
-    borderRadius: "20px",
-    marginBottom: "20px",
-  },
-  heroTitle: {
-    fontFamily: "'Playfair Display',serif",
-    fontSize: "clamp(36px,6vw,64px)",
-    fontWeight: "700",
-    color: "#f0f0f5",
-    lineHeight: "1.15",
-    marginBottom: "16px",
-  },
-  heroSub: { color: "#9090a8", fontSize: "16px", marginBottom: "36px" },
-  searchWrap: { position: "relative", maxWidth: "480px", margin: "0 auto" },
-  searchIcon: {
-    position: "absolute",
-    left: "16px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    fontSize: "16px",
-    zIndex: 1,
-    pointerEvents: "none",
-  },
-  searchInput: {
-    width: "100%",
-    paddingLeft: "44px",
-    paddingRight: "80px",
-    fontSize: "15px",
-    background: "#1a1a24",
-    border: "1px solid rgba(255,255,255,0.1)",
-    borderRadius: "50px",
-    height: "50px",
-    outline: "none",
-    color: "#f0f0f5",
-    fontFamily: "'DM Sans',sans-serif",
-  },
-  searchSpinner: {
-    position: "absolute",
-    right: "44px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    width: "16px",
-    height: "16px",
-    border: "2px solid rgba(255,255,255,0.1)",
-    borderTop: "2px solid #e8c547",
-    borderRadius: "50%",
-    animation: "spin 0.7s linear infinite",
-    display: "block",
-  },
-  clearX: {
-    position: "absolute",
-    right: "16px",
-    top: "50%",
-    transform: "translateY(-50%)",
-    background: "none",
-    border: "none",
-    color: "#9090a8",
-    fontSize: "14px",
-    cursor: "pointer",
-    padding: "4px 8px",
-  },
-  searchHint: { color: "#9090a8", fontSize: "13px", marginTop: "12px" },
-  filterRow: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-    marginBottom: "28px",
-  },
-  filterBtn: {
-    padding: "8px 20px",
-    borderRadius: "50px",
-    border: "1px solid rgba(255,255,255,0.1)",
-    background: "transparent",
-    color: "#9090a8",
-    fontSize: "13px",
-    fontWeight: "500",
-    cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
-  },
-  filterBtnActive: {
-    background: "#e8c547",
-    color: "#0a0a0f",
-    border: "1px solid #e8c547",
-    fontWeight: "700",
-  },
-  headerRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-    marginBottom: "24px",
-  },
-  sectionTitle: {
-    fontFamily: "'Playfair Display',serif",
-    fontSize: "26px",
-    fontWeight: "700",
-    color: "#f0f0f5",
-  },
-  sectionSub: { color: "#9090a8", fontSize: "13px", marginTop: "4px" },
-  rightRow: { display: "flex", gap: "12px", alignItems: "center" },
-  sortSelect: {
-    background: "#1a1a24",
-    border: "1px solid rgba(255,255,255,0.1)",
-    color: "#f0f0f5",
-    padding: "10px 16px",
-    borderRadius: "10px",
-    fontSize: "13px",
-    cursor: "pointer",
-    outline: "none",
-    fontFamily: "'DM Sans',sans-serif",
-  },
-  uploadBtn: {
-    background: "#e8c547",
-    color: "#0a0a0f",
-    border: "none",
-    padding: "10px 20px",
-    borderRadius: "10px",
-    fontWeight: "700",
-    fontSize: "13px",
-    cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
-  },
-  grid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill,minmax(240px,1fr))",
-    gap: "24px",
-  },
-  spinner: {
-    width: "20px",
-    height: "20px",
-    border: "2px solid rgba(255,255,255,0.1)",
-    borderTop: "2px solid #e8c547",
-    borderRadius: "50%",
-    animation: "spin 0.7s linear infinite",
-  },
-  loadMoreBtn: {
-    background: "transparent",
-    border: "1px solid rgba(232,197,71,0.4)",
-    color: "#e8c547",
-    padding: "12px 28px",
-    borderRadius: "10px",
-    fontSize: "14px",
-    fontWeight: "600",
-    cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
-  },
-  endText: {
-    textAlign: "center",
-    color: "#9090a8",
-    fontSize: "13px",
-    marginTop: "36px",
-    letterSpacing: "2px",
-  },
-  emptyWrap: { textAlign: "center", padding: "80px 20px" },
-  emptyTitle: {
-    fontFamily: "'Playfair Display',serif",
-    fontSize: "24px",
-    color: "#f0f0f5",
-    marginBottom: "10px",
-  },
-  emptySub: { color: "#9090a8", fontSize: "15px", marginBottom: "24px" },
-  clearBtn: {
-    background: "transparent",
-    border: "1px solid rgba(232,197,71,0.5)",
-    color: "#e8c547",
-    padding: "10px 24px",
-    borderRadius: "10px",
-    fontSize: "14px",
-    cursor: "pointer",
-    fontFamily: "'DM Sans',sans-serif",
-  },
-};
+const ProductCard = ({
+  product: p,
+  wishlisted,
+  onWishlist,
+  onAddCart,
+  onView,
+}) => (
+  <div
+    onClick={onView}
+    style={{
+      background: "#111118",
+      borderRadius: "16px",
+      border: "1px solid rgba(255,255,255,0.07)",
+      overflow: "hidden",
+      cursor: "pointer",
+      transition: "transform 0.25s, box-shadow 0.25s, border-color 0.25s",
+    }}
+    onMouseEnter={(e) => {
+      e.currentTarget.style.transform = "translateY(-4px)";
+      e.currentTarget.style.boxShadow = "0 12px 40px rgba(0,0,0,0.3)";
+      e.currentTarget.style.borderColor = "rgba(232,197,71,0.2)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "none";
+      e.currentTarget.style.boxShadow = "none";
+      e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)";
+    }}
+  >
+    <div style={{ height: "220px", overflow: "hidden", position: "relative" }}>
+      <img
+        src={p.image}
+        alt={p.title}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          display: "block",
+          transition: "transform 0.4s",
+        }}
+        onMouseEnter={(e) => (e.target.style.transform = "scale(1.06)")}
+        onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+        onError={(e) => {
+          e.target.src =
+            "https://placehold.co/400x220/1a1a24/9090a8?text=No+Image";
+        }}
+      />
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          onWishlist();
+        }}
+        style={{
+          position: "absolute",
+          top: "10px",
+          right: "10px",
+          background: "rgba(8,8,15,0.7)",
+          border: "none",
+          borderRadius: "50%",
+          width: "34px",
+          height: "34px",
+          fontSize: "15px",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backdropFilter: "blur(8px)",
+        }}
+      >
+        {wishlisted ? "❤️" : "🤍"}
+      </button>
+    </div>
+    <div style={{ padding: "16px" }}>
+      <p
+        style={{
+          fontSize: "10px",
+          color: "#e8c547",
+          textTransform: "uppercase",
+          letterSpacing: "2px",
+          fontWeight: "600",
+          marginBottom: "6px",
+        }}
+      >
+        {p.category || "general"}
+      </p>
+      <h3
+        style={{
+          fontFamily: "'Playfair Display',serif",
+          fontSize: "16px",
+          color: "#f0f0f5",
+          fontWeight: "600",
+          marginBottom: "6px",
+          lineHeight: "1.3",
+        }}
+      >
+        {p.title}
+      </h3>
+      <p
+        style={{
+          fontSize: "13px",
+          color: "#9090a8",
+          lineHeight: "1.5",
+          marginBottom: "14px",
+          display: "-webkit-box",
+          WebkitLineClamp: 2,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}
+      >
+        {p.description}
+      </p>
+      {p.numReviews > 0 && (
+        <p style={{ fontSize: "12px", color: "#9090a8", marginBottom: "10px" }}>
+          <span style={{ color: "#e8c547" }}>
+            {"★".repeat(Math.round(p.avgRating || 0))}
+          </span>{" "}
+          {(p.avgRating || 0).toFixed(1)} ({p.numReviews})
+        </p>
+      )}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <p style={{ fontSize: "18px", fontWeight: "700", color: "#f0f0f5" }}>
+          Rs.{Number(p.price).toLocaleString()}
+        </p>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onAddCart();
+          }}
+          style={{
+            background: "#e8c547",
+            color: "#0a0a0f",
+            border: "none",
+            padding: "8px 16px",
+            borderRadius: "8px",
+            fontWeight: "700",
+            fontSize: "12px",
+            cursor: "pointer",
+            fontFamily: "'DM Sans',sans-serif",
+            transition: "background 0.2s",
+          }}
+          onMouseEnter={(e) => (e.target.style.background = "#c9a227")}
+          onMouseLeave={(e) => (e.target.style.background = "#e8c547")}
+        >
+          + Cart
+        </button>
+      </div>
+    </div>
+  </div>
+);
 
 export default Home;

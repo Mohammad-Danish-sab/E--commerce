@@ -3,6 +3,14 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
+const STATUS_COLOR = {
+  pending: "#e8c547",
+  processing: "#63b3ed",
+  shipped: "#68d391",
+  delivered: "#48bb78",
+  cancelled: "#ff4d6d",
+};
+
 const StatCard = ({ icon, label, value, sub, color = "#e8c547" }) => (
   <div
     style={{
@@ -44,74 +52,12 @@ const StatCard = ({ icon, label, value, sub, color = "#e8c547" }) => (
   </div>
 );
 
-const BarChart = ({ data, max }) => (
-  <div
-    style={{
-      display: "flex",
-      alignItems: "flex-end",
-      gap: "8px",
-      height: "100px",
-    }}
-  >
-    {data.map((item, i) => (
-      <div
-        key={i}
-        style={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          gap: "6px",
-        }}
-      >
-        <p style={{ color: "#9090a8", fontSize: "11px", fontWeight: "600" }}>
-          {item.value > 0 ? `Rs.${item.value}` : ""}
-        </p>
-        <div
-          style={{
-            width: "100%",
-            height: "64px",
-            display: "flex",
-            alignItems: "flex-end",
-            background: "rgba(232,197,71,0.06)",
-            borderRadius: "6px 6px 0 0",
-          }}
-        >
-          <div
-            style={{
-              width: "100%",
-              background: "linear-gradient(to top,#e8c547,#c9a227)",
-              borderRadius: "6px 6px 0 0",
-              height: `${max ? (item.value / max) * 100 : 0}%`,
-              minHeight: item.value > 0 ? "4px" : "0",
-              transition: "height 0.8s ease",
-            }}
-          ></div>
-        </div>
-        <span
-          style={{ fontSize: "10px", color: "#9090a8", whiteSpace: "nowrap" }}
-        >
-          {item.label}
-        </span>
-      </div>
-    ))}
-  </div>
-);
-
-const STATUS_COLOR = {
-  pending: "#e8c547",
-  processing: "#63b3ed",
-  shipped: "#68d391",
-  delivered: "#48bb78",
-  cancelled: "#ff4d6d",
-};
-
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
   const [users, setUsers] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("overview");
 
@@ -163,7 +109,7 @@ const AdminDashboard = () => {
       setOrders((prev) =>
         prev.map((o) => (o._id === orderId ? { ...o, status } : o)),
       );
-      toast.success("Order status updated!");
+      toast.success("Status updated!");
     } catch {
       toast.error("Failed to update.");
     }
@@ -183,7 +129,8 @@ const AdminDashboard = () => {
     }
   };
 
-  const revenueChart = Array(7)
+  // Revenue chart — last 7 days
+  const chart = Array(7)
     .fill(0)
     .map((_, i) => {
       const d = new Date();
@@ -199,7 +146,7 @@ const AdminDashboard = () => {
         .reduce((s, o) => s + (o.totalAmount || 0), 0);
       return { label, value };
     });
-  const chartMax = Math.max(...revenueChart.map((d) => d.value), 1);
+  const chartMax = Math.max(...chart.map((d) => d.value), 1);
 
   if (loading)
     return (
@@ -222,11 +169,13 @@ const AdminDashboard = () => {
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }}
-        ></div>
-        <p style={{ color: "#9090a8" }}>Loading dashboard...</p>
+        />
+        <p style={{ color: "#9090a8" }}>Loading dashboard…</p>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
+
+  const TABS = ["overview", "orders", "products", "users"];
 
   return (
     <div
@@ -236,6 +185,7 @@ const AdminDashboard = () => {
         padding: "40px 24px 80px",
       }}
     >
+      {/* Header */}
       <div
         style={{
           display: "flex",
@@ -284,13 +234,13 @@ const AdminDashboard = () => {
         </button>
       </div>
 
-      {/* Stats */}
+      {/* Stat cards */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))",
+          gridTemplateColumns: "repeat(auto-fill,minmax(210px,1fr))",
           gap: "16px",
-          marginBottom: "32px",
+          marginBottom: "28px",
         }}
       >
         <StatCard
@@ -319,14 +269,14 @@ const AdminDashboard = () => {
         />
       </div>
 
-      {/* Revenue Chart */}
+      {/* Revenue chart */}
       <div
         style={{
           background: "#111118",
           border: "1px solid rgba(255,255,255,0.07)",
           borderRadius: "16px",
           padding: "24px",
-          marginBottom: "32px",
+          marginBottom: "28px",
         }}
       >
         <h3
@@ -334,12 +284,63 @@ const AdminDashboard = () => {
             fontFamily: "'Playfair Display',serif",
             fontSize: "18px",
             color: "#f0f0f5",
-            marginBottom: "24px",
+            marginBottom: "20px",
           }}
         >
           Revenue — Last 7 Days
         </h3>
-        <BarChart data={revenueChart} max={chartMax} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "flex-end",
+            gap: "8px",
+            height: "100px",
+          }}
+        >
+          {chart.map((d, i) => (
+            <div
+              key={i}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "6px",
+              }}
+            >
+              <div
+                style={{
+                  width: "100%",
+                  height: "70px",
+                  background: "rgba(232,197,71,0.06)",
+                  borderRadius: "4px 4px 0 0",
+                  display: "flex",
+                  alignItems: "flex-end",
+                }}
+              >
+                <div
+                  style={{
+                    width: "100%",
+                    background: "linear-gradient(to top,#e8c547,#c9a227)",
+                    borderRadius: "4px 4px 0 0",
+                    height: `${(d.value / chartMax) * 100}%`,
+                    minHeight: d.value > 0 ? "4px" : "0",
+                    transition: "height 0.8s ease",
+                  }}
+                />
+              </div>
+              <span
+                style={{
+                  fontSize: "10px",
+                  color: "#9090a8",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {d.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -354,7 +355,7 @@ const AdminDashboard = () => {
           marginBottom: "28px",
         }}
       >
-        {["overview", "orders", "products", "users"].map((t) => (
+        {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
@@ -496,13 +497,7 @@ const AdminDashboard = () => {
                   }}
                 />
                 <div style={{ flex: 1 }}>
-                  <p
-                    style={{
-                      color: "#f0f0f5",
-                      fontSize: "13px",
-                      fontWeight: "500",
-                    }}
-                  >
+                  <p style={{ color: "#f0f0f5", fontSize: "13px" }}>
                     {p.title}
                   </p>
                   <p style={{ color: "#9090a8", fontSize: "11px" }}>
@@ -534,14 +529,14 @@ const AdminDashboard = () => {
                 background: "#111118",
                 border: "1px solid rgba(255,255,255,0.07)",
                 borderRadius: "14px",
-                padding: "16px 24px",
+                padding: "16px 22px",
                 display: "flex",
                 alignItems: "center",
                 gap: "16px",
                 flexWrap: "wrap",
               }}
             >
-              <div style={{ flex: 1, minWidth: "160px" }}>
+              <div style={{ flex: 1, minWidth: "150px" }}>
                 <p
                   style={{
                     color: "#f0f0f5",
@@ -570,7 +565,6 @@ const AdminDashboard = () => {
                 style={{
                   color: "#e8c547",
                   fontWeight: "700",
-                  fontFamily: "'Playfair Display',serif",
                   fontSize: "16px",
                 }}
               >
@@ -589,7 +583,6 @@ const AdminDashboard = () => {
                   cursor: "pointer",
                   outline: "none",
                   fontWeight: "600",
-                  minWidth: "130px",
                 }}
               >
                 {[
@@ -657,7 +650,7 @@ const AdminDashboard = () => {
                   style={{
                     color: "#9090a8",
                     fontSize: "12px",
-                    marginBottom: "10px",
+                    marginBottom: "8px",
                   }}
                 >
                   {p.category}
@@ -719,10 +712,10 @@ const AdminDashboard = () => {
                 background: "#111118",
                 border: "1px solid rgba(255,255,255,0.07)",
                 borderRadius: "14px",
-                padding: "16px 24px",
+                padding: "16px 22px",
                 display: "flex",
                 alignItems: "center",
-                gap: "16px",
+                gap: "14px",
               }}
             >
               <div
@@ -771,7 +764,7 @@ const AdminDashboard = () => {
               >
                 {u.role || "user"}
               </span>
-              <p style={{ color: "#9090a8", fontSize: "12px", flexShrink: 0 }}>
+              <p style={{ color: "#9090a8", fontSize: "12px" }}>
                 Joined{" "}
                 {new Date(u.createdAt).toLocaleDateString("en-IN", {
                   month: "short",

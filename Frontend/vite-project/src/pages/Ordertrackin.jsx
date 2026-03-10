@@ -1,11 +1,9 @@
-// pages/OrderTracking.jsx  →  route: /orders/:id/track
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import toast from "react-hot-toast";
 
 const STEPS = ["pending", "processing", "shipped", "delivered"];
-
 const STEP_META = {
   pending: {
     icon: "🕐",
@@ -25,7 +23,7 @@ const STEP_META = {
   delivered: {
     icon: "✅",
     label: "Delivered",
-    desc: "Your order has been delivered.",
+    desc: "Your order has been delivered!",
   },
 };
 
@@ -69,10 +67,11 @@ const OrderTracking = () => {
             borderRadius: "50%",
             animation: "spin 0.8s linear infinite",
           }}
-        ></div>
+        />
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     );
+
   if (!order)
     return (
       <div style={{ textAlign: "center", padding: "80px", color: "#9090a8" }}>
@@ -81,8 +80,9 @@ const OrderTracking = () => {
     );
 
   const status = order.status || "pending";
-  const currentStep = STEPS.indexOf(status);
-  const isCancelled = status === "cancelled";
+  const cancelled = status === "cancelled";
+  const currentIdx = STEPS.indexOf(status);
+  const fillPct = cancelled ? 0 : (currentIdx / (STEPS.length - 1)) * 100;
   const date = new Date(order.createdAt).toLocaleDateString("en-IN", {
     day: "numeric",
     month: "long",
@@ -110,10 +110,10 @@ const OrderTracking = () => {
       </button>
 
       {/* Header */}
-      <div style={{ marginBottom: "36px" }}>
+      <div style={{ marginBottom: "32px" }}>
         <p
           style={{
-            fontSize: "12px",
+            fontSize: "11px",
             color: "#e8c547",
             letterSpacing: "3px",
             textTransform: "uppercase",
@@ -136,41 +136,38 @@ const OrderTracking = () => {
         <p style={{ color: "#9090a8", fontSize: "14px" }}>Placed on {date}</p>
       </div>
 
-      {/* Cancelled State */}
-      {isCancelled && (
+      {/* Cancelled */}
+      {cancelled && (
         <div
           style={{
             background: "rgba(255,77,109,0.08)",
             border: "1px solid rgba(255,77,109,0.2)",
             borderRadius: "14px",
-            padding: "20px 24px",
-            marginBottom: "32px",
+            padding: "24px",
             textAlign: "center",
+            marginBottom: "28px",
           }}
         >
           <p style={{ fontSize: "36px", marginBottom: "8px" }}>❌</p>
           <p style={{ color: "#ff4d6d", fontWeight: "700", fontSize: "16px" }}>
             Order Cancelled
           </p>
-          <p style={{ color: "#9090a8", fontSize: "14px", marginTop: "6px" }}>
-            This order was cancelled.
-          </p>
         </div>
       )}
 
-      {/* Progress Tracker */}
-      {!isCancelled && (
+      {/* Tracker */}
+      {!cancelled && (
         <div
           style={{
             background: "#111118",
             border: "1px solid rgba(255,255,255,0.07)",
             borderRadius: "20px",
-            padding: "32px",
-            marginBottom: "32px",
+            padding: "36px",
+            marginBottom: "28px",
           }}
         >
           <div style={{ position: "relative" }}>
-            {/* Progress line */}
+            {/* Background line */}
             <div
               style={{
                 position: "absolute",
@@ -178,10 +175,10 @@ const OrderTracking = () => {
                 left: "22px",
                 right: "22px",
                 height: "2px",
-                background: "rgba(255,255,255,0.07)",
-                zIndex: 0,
+                background: "rgba(255,255,255,0.06)",
               }}
-            ></div>
+            />
+            {/* Fill line */}
             <div
               style={{
                 position: "absolute",
@@ -189,11 +186,10 @@ const OrderTracking = () => {
                 left: "22px",
                 height: "2px",
                 background: "#e8c547",
-                zIndex: 1,
-                width: `${Math.max(0, currentStep / (STEPS.length - 1)) * 100}%`,
-                transition: "width 1s ease",
+                width: `${fillPct}%`,
+                transition: "width 0.8s ease",
               }}
-            ></div>
+            />
 
             {/* Steps */}
             <div
@@ -205,8 +201,8 @@ const OrderTracking = () => {
               }}
             >
               {STEPS.map((step, i) => {
-                const done = i <= currentStep;
-                const active = i === currentStep;
+                const done = i <= currentIdx;
+                const active = i === currentIdx;
                 const meta = STEP_META[step];
                 return (
                   <div
@@ -250,31 +246,30 @@ const OrderTracking = () => {
                         </span>
                       )}
                     </div>
-                    <div style={{ textAlign: "center" }}>
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          fontWeight: "600",
-                          color: done ? "#f0f0f5" : "#9090a8",
-                        }}
-                      >
-                        {meta.label}
-                      </p>
-                    </div>
+                    <p
+                      style={{
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        color: done ? "#f0f0f5" : "#9090a8",
+                        textAlign: "center",
+                      }}
+                    >
+                      {meta.label}
+                    </p>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Current step desc */}
+          {/* Current step description */}
           <div
             style={{
               marginTop: "28px",
-              padding: "16px 20px",
               background: "rgba(232,197,71,0.08)",
               border: "1px solid rgba(232,197,71,0.2)",
               borderRadius: "12px",
+              padding: "16px 20px",
               textAlign: "center",
             }}
           >
@@ -297,7 +292,6 @@ const OrderTracking = () => {
           border: "1px solid rgba(255,255,255,0.07)",
           borderRadius: "16px",
           padding: "24px",
-          marginBottom: "20px",
         }}
       >
         <h3
@@ -362,13 +356,14 @@ const OrderTracking = () => {
             paddingTop: "14px",
             display: "flex",
             justifyContent: "space-between",
+            alignItems: "center",
           }}
         >
           <span style={{ color: "#9090a8" }}>Order Total</span>
           <span
             style={{
               fontFamily: "'Playfair Display',serif",
-              fontSize: "20px",
+              fontSize: "22px",
               fontWeight: "700",
               color: "#e8c547",
             }}
@@ -377,6 +372,8 @@ const OrderTracking = () => {
           </span>
         </div>
       </div>
+
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );
 };
