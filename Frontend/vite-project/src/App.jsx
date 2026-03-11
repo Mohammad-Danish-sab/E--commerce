@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import BackToTop from "./components/BackToTop";
+import BackToTop from "../components/BackToTop";
+import LiveChat from "./components/LiveChat";
 import Home from "./pages/Home";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
@@ -13,6 +14,10 @@ import Profile from "./pages/Profile";
 import Wishlist from "./pages/Wishlist";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrderTracking from "./pages/OrderTracking";
+import Notifications from "./pages/Notifications";
+import CompareProducts from "./pages/CompareProducts";
+import GiftCards from "./pages/GiftCards";
+import FeaturedProducts from "./pages/FeaturedProducts";
 
 
 function App() {
@@ -21,6 +26,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/featured" element={<FeaturedProducts />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
@@ -31,9 +37,13 @@ function App() {
         <Route path="/profile" element={<Profile />} />
         <Route path="/wishlist" element={<Wishlist />} />
         <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/notifications" element={<Notifications />} />
+        <Route path="/compare" element={<CompareProducts />} />
+        <Route path="/gift-cards" element={<GiftCards />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BackToTop />
+      <LiveChat />
     </>
   );
 }
