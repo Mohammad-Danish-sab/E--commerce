@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "./ThemeToggle";
 import toast from "react-hot-toast";
 
 const Navbar = () => {
@@ -14,6 +16,11 @@ const Navbar = () => {
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+
+    const notifications = JSON.parse(
+      localStorage.getItem("notifications") || "[]",
+    );
+    const unreadNotifs = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -34,7 +41,11 @@ const Navbar = () => {
   };
 
   const isActive = (path) => location.pathname === path;
+   const S = (k) => `var(--${k})`;
 
+   const navBg =
+     theme === "light" ? `rgba(245,245,240,0.97)` : `rgba(8,8,15,0.97)`;
+     
   return (
     <>
       <nav
