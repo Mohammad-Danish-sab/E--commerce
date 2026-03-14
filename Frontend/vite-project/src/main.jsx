@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 import App from "./App";
 import { CartProvider } from "./context/CartContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { ThemeProvider } from "./context/ThemeContext"; 
 import "./index.css";
 
 if ("serviceWorker" in navigator) {

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ThemeContext } from "../context/ThemeContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
@@ -16,6 +17,7 @@ const Navbar = () => {
   const totalItems = cart.reduce((s, i) => s + i.qty, 0);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
     const notifications = JSON.parse(
       localStorage.getItem("notifications") || "[]",
