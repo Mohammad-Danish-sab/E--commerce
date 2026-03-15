@@ -17,7 +17,7 @@ import OrderTracking from "./pages/OrderTracking";
 import Notifications from "./pages/Notifications";
 import CompareProducts from "./pages/CompareProducts";
 import GiftCards from "./pages/GiftCards";
-// import FeaturedProducts from "./pages/FeaturedProducts";
+import FeaturedProducts from "./pages/FeaturedProducts";
 
 function App() {
   return (
@@ -25,7 +25,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Home />} />
-        {/* <Route path="/featured" element={<FeaturedProducts />} /> */}
+        <Route path="/featured" element={<FeaturedProducts />} />
         <Route path="/product/:id" element={<ProductDetails />} />
         <Route path="/cart" element={<Cart />} />
         <Route path="/login" element={<Login />} />
