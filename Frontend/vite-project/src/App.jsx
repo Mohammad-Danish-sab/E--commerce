@@ -16,7 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import OrderTracking from "./pages/OrderTracking";
 import Notifications from "./pages/Notifications";
 import CompareProducts from "./pages/CompareProducts";
-// import GiftCards from "./pages/GiftCards";
+import GiftCards from "./pages/GiftCards";
 // import FeaturedProducts from "./pages/FeaturedProducts";
 
 function App() {
@@ -38,7 +38,7 @@ function App() {
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/compare" element={<CompareProducts />} />
-        {/* <Route path="/gift-cards" element={<GiftCards />} /> */}
+        <Route path="/gift-cards" element={<GiftCards />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BackToTop />
