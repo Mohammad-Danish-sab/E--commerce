@@ -11,18 +11,20 @@ const storage = new CloudinaryStorage({
   },
 });
 
-// ✅ FIX: Validate file type and limit size (5MB)
 const fileFilter = (req, file, cb) => {
   const allowed = ["image/jpeg", "image/png", "image/webp"];
+
   if (allowed.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error("Only JPG, PNG, and WEBP images are allowed"), false);
+    cb(new Error("Only JPG, PNG, WEBP images allowed"), false);
   }
 };
 
-const upload = multer({ storage, fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
-}); 
+const upload = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
 
 export default upload;

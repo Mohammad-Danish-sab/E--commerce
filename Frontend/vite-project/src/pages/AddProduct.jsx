@@ -40,7 +40,7 @@ const AddProduct = () => {
       const token = localStorage.getItem("token");
       const formData = new FormData();
       formData.append("title", form.title);
-      formData.append("price", Number(form.price));
+      formData.append("price", form.price);
       formData.append("description", form.description);
       formData.append("category", form.category || "general");
       formData.append("image", imageFile);
@@ -48,9 +48,9 @@ const AddProduct = () => {
       // FIX: Use Authorization token + admin key header together
       await axios.post("http://localhost:5000/api/products", formData, {
         headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: "Bearer " + token,
-          "x-admin-key": "danish123",
+          // "Content-Type": "multipart/form-data",
+          Authorization: `Bearer ${token}`,
+          // "x-admin-key": "danish123",
         },
       });
       toast.dismiss(loadingToast);
@@ -79,11 +79,12 @@ const AddProduct = () => {
         <div style={S.field}>
           <label style={S.label}>Product Title *</label>
           <input
-            name="title"
-            placeholder="e.g. Nike Air Max"
-            value={form.title}
-            onChange={handleChange}
-            required
+            id="imgInput"
+            name="image"
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            style={{ display: "none" }}
           />
         </div>
 
