@@ -4,20 +4,6 @@ import toast from "react-hot-toast";
 
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// ──────────────────────────────────────────────────────
-// HOW TO USE:
-// 1. npm install razorpay  (in Backend/)
-// 2. Add to Backend/.env:
-//    RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxxxxx
-//    RAZORPAY_KEY_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
-// 3. Add to Frontend/.env:
-//    VITE_RAZORPAY_KEY_ID=rzp_test_xxxxxxxxxxxxxxxx
-// 4. Add paymentRoutes to Backend/server.js:
-//    import paymentRoutes from "./routes/paymentRoutes.js";
-//    app.use("/api/payment", paymentRoutes);
-// 5. Replace the <PlaceOrder> button in Cart.jsx with:
-//    <RazorpayCheckout amount={finalTotal} onSuccess={handleOrderSuccess} />
-// ──────────────────────────────────────────────────────
 
 const RazorpayCheckout = ({ amount, onSuccess, disabled = false }) => {
   const [loading, setLoading] = useState(false);
