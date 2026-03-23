@@ -19,6 +19,7 @@ import CompareProducts from "./pages/CompareProducts";
 import GiftCards from "./pages/GiftCards";
 import FeaturedProducts from "./pages/FeaturedProducts";
 import About from "./pages/About";
+import FlashSale from "./pages/FlashSale";
 
 function App() {
   return (
@@ -41,6 +42,7 @@ function App() {
         <Route path="/compare" element={<CompareProducts />} />
         <Route path="/gift-cards" element={<GiftCards />} />
         <Route path="/about" element={<About />} />
+        <Route path="/flash-sale" element={<FlashSale />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BackToTop />
