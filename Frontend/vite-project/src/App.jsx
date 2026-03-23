@@ -18,6 +18,7 @@ import Notifications from "./pages/Notifications";
 import CompareProducts from "./pages/CompareProducts";
 import GiftCards from "./pages/GiftCards";
 import FeaturedProducts from "./pages/FeaturedProducts";
+import About from "./pages/About";
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/compare" element={<CompareProducts />} />
         <Route path="/gift-cards" element={<GiftCards />} />
+        <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <BackToTop />
