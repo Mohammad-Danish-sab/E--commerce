@@ -22,7 +22,7 @@ const Login = () => {
       // FIX: Save both token AND user object (original only saved token)
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      toast.success("Welcome back, " + data.user.name + "!");
+      toast.success("Welcome back👋🏻, " + data.user.name + "!");
       navigate("/");
     } catch (err) {
       setError(
