@@ -79,12 +79,12 @@ const AddProduct = () => {
         <div style={S.field}>
           <label style={S.label}>Product Title *</label>
           <input
-            id="imgInput"
-            name="image"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-            style={{ display: "none" }}
+            name="title"
+            type="text"
+            placeholder="Product title"
+            value={form.title}
+            onChange={handleChange}
+            required
           />
         </div>
 
@@ -150,6 +150,7 @@ const AddProduct = () => {
                 </p>
               </div>
             )}
+            {/* Only one file input for image upload */}
             <input
               id="imgInput"
               type="file"

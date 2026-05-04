@@ -19,7 +19,6 @@ const Login = () => {
         "http://localhost:5000/api/auth/login",
         { email, password },
       );
-      // FIX: Save both token AND user object (original only saved token)
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
       toast.success("Welcome back👋🏻, " + data.user.name + "!");
