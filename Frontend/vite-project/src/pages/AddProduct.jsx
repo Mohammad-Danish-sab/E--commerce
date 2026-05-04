@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import api from "../services/api";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 
@@ -46,7 +46,7 @@ const AddProduct = () => {
       formData.append("image", imageFile);
 
       // FIX: Use Authorization token + admin key header together
-      await axios.post("http://localhost:5000/api/products", formData, {
+      await api.post("/products", formData, {
         headers: {
           // "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
