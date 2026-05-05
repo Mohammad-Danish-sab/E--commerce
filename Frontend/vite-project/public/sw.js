@@ -22,7 +22,7 @@ self.addEventListener("activate", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
-  // Network first, fallback to cache
+  // Network first, fallback to cache, always return a valid Response
   event.respondWith(
     fetch(event.request)
       .then((res) => {
@@ -30,6 +30,14 @@ self.addEventListener("fetch", (event) => {
         caches.open(CACHE_NAME).then((c) => c.put(event.request, clone));
         return res;
       })
-      .catch(() => caches.match(event.request)),
+      .catch(() =>
+        caches.match(event.request).then((cachedRes) => {
+          if (cachedRes) return cachedRes;
+          return new Response("Network error", {
+            status: 408,
+            statusText: "Network error",
+          });
+        }),
+      ),
   );
 });
