@@ -1,78 +1,119 @@
 import { useState } from "react";
-import axios from "axios";
-import { useNavigate, Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Mail, Lock, Eye, EyeOff, ShoppingBag } from "lucide-react";
 import toast from "react-hot-toast";
+import api from "../services/api";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
   const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setForm({
+      ...form,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   const loginHandler = async (e) => {
     e.preventDefault();
-    // setError("");
+
     setLoading(true);
+
     try {
-      const { data } = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        { email, password },
-      );
+      const { data } = await api.post("/auth/login", form);
+
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      toast.success("Welcome back👋🏻, " + data.user.name + "!");
+
+      toast.success(`Welcome ${data.user.name}`);
+
       navigate("/");
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Login failed. Check your credentials.",
-      );
+      toast.error(err.response?.data?.message || "Login Failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={S.page}>
-      <div style={S.card}>
-        <div style={S.top}>
-          <span style={S.star}>✦</span>
-          <h2 style={S.title}>Welcome Back</h2>
-          <p style={S.sub}>Sign in to your account</p>
+    <div style={styles.page}>
+      <div style={styles.overlay}></div>
+
+      <div style={styles.card}>
+        <div style={styles.logo}>
+          <ShoppingBag size={42} color="#E8C547" />
         </div>
 
-        {error && <div style={S.error}>{error}</div>}
+        <h1 style={styles.heading}>Welcome Back</h1>
 
-        <form onSubmit={loginHandler} style={S.form}>
-          <div style={S.field}>
-            <label style={S.label}>Email</label>
+        <p style={styles.subtitle}>Login to continue shopping</p>
+
+        <form onSubmit={loginHandler}>
+          <div style={styles.inputBox}>
+            <Mail size={18} color="#999" />
+
             <input
+              style={styles.input}
               type="email"
-              placeholder="you@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              name="email"
+              placeholder="Email Address"
+              value={form.email}
+              onChange={handleChange}
               required
             />
           </div>
-          <div style={S.field}>
-            <label style={S.label}>Password</label>
+
+          <div style={styles.inputBox}>
+            <Lock size={18} color="#999" />
+
             <input
-              type="password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+              type={showPassword ? "text" : "password"}
+              name="password"
+              placeholder="Password"
+              value={form.password}
+              onChange={handleChange}
               required
             />
+
+            <button
+              type="button"
+              style={styles.eyeBtn}
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
           </div>
-          <button type="submit" disabled={loading} style={S.btn}>
-            {loading ? "Signing in..." : "Sign In"}
+
+          <div style={styles.row}>
+            <label style={styles.checkbox}>
+              <input type="checkbox" />
+              Remember me
+            </label>
+
+            <Link to="/forgot-password" style={styles.link}>
+              Forgot Password?
+            </Link>
+          </div>
+
+          <button disabled={loading} style={styles.button}>
+            {loading ? "Signing In..." : "Sign In"}
           </button>
         </form>
 
-        <p style={S.footer}>
-          No account?{" "}
-          <Link to="/register" style={S.flink}>
-            Create one
+        <p style={styles.bottom}>
+          Don't have an account?
+          <Link to="/register" style={styles.register}>
+            Register
           </Link>
         </p>
       </div>
@@ -80,67 +121,132 @@ const Login = () => {
   );
 };
 
-const S = {
+const styles = {
   page: {
-    minHeight: "90vh",
+    minHeight: "100vh",
+    background: "linear-gradient(135deg,#050507,#111118,#0b0b10)",
     display: "flex",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
+    position: "relative",
+    overflow: "hidden",
     padding: "20px",
   },
+
+  overlay: {
+    position: "absolute",
+    width: 500,
+    height: 500,
+    borderRadius: "50%",
+    background: "rgba(232,197,71,.12)",
+    filter: "blur(120px)",
+    top: -100,
+    right: -100,
+  },
+
   card: {
-    background: "#111118",
-    border: "1px solid rgba(255,255,255,0.08)",
-    borderRadius: "20px",
-    padding: "48px 40px",
-    width: "100%",
-    maxWidth: "420px",
-    boxShadow: "0 20px 60px rgba(0,0,0,0.4)",
+    width: 430,
+    maxWidth: "100%",
+    background: "rgba(17,17,24,.92)",
+    backdropFilter: "blur(25px)",
+    border: "1px solid rgba(255,255,255,.08)",
+    borderRadius: 25,
+    padding: 40,
+    color: "#fff",
+    zIndex: 10,
+    boxShadow: "0 20px 60px rgba(0,0,0,.45)",
   },
-  top: { textAlign: "center", marginBottom: "32px" },
-  star: {
-    fontSize: "24px",
-    color: "#e8c547",
-    display: "block",
-    marginBottom: "12px",
+
+  logo: {
+    display: "flex",
+    justifyContent: "center",
+    marginBottom: 20,
   },
-  title: {
-    fontFamily: "'Playfair Display', serif",
-    fontSize: "28px",
-    color: "#f0f0f5",
-    marginBottom: "8px",
+
+  heading: {
+    textAlign: "center",
+    fontSize: 34,
+    marginBottom: 10,
+    color: "#fff",
   },
-  sub: { color: "#9090a8", fontSize: "14px" },
-  error: {
-    background: "rgba(255,77,109,0.1)",
-    border: "1px solid rgba(255,77,109,0.3)",
-    color: "#ff4d6d",
-    padding: "12px 16px",
-    borderRadius: "10px",
-    fontSize: "13px",
-    marginBottom: "20px",
+
+  subtitle: {
+    textAlign: "center",
+    color: "#999",
+    marginBottom: 35,
   },
-  form: { display: "flex", flexDirection: "column", gap: "18px" },
-  field: { display: "flex", flexDirection: "column", gap: "8px" },
-  label: { fontSize: "13px", fontWeight: "500", color: "#9090a8" },
-  btn: {
-    background: "#e8c547",
-    color: "#0a0a0f",
+
+  inputBox: {
+    display: "flex",
+    alignItems: "center",
+    background: "#1B1B24",
+    borderRadius: 12,
+    padding: "14px 16px",
+    marginBottom: 18,
+    border: "1px solid rgba(255,255,255,.06)",
+  },
+
+  input: {
+    flex: 1,
+    marginLeft: 12,
     border: "none",
-    padding: "14px",
-    borderRadius: "10px",
-    fontWeight: "700",
-    fontSize: "15px",
-    marginTop: "8px",
+    outline: "none",
+    background: "transparent",
+    color: "#fff",
+    fontSize: 15,
+  },
+
+  eyeBtn: {
+    background: "transparent",
+    border: "none",
+    color: "#999",
     cursor: "pointer",
   },
-  footer: {
-    textAlign: "center",
-    marginTop: "24px",
-    color: "#9090a8",
-    fontSize: "14px",
+
+  row: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 25,
+    color: "#999",
+    fontSize: 14,
   },
-  flink: { color: "#e8c547", fontWeight: "600" },
+
+  checkbox: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+  },
+
+  link: {
+    color: "#E8C547",
+    textDecoration: "none",
+  },
+
+  button: {
+    width: "100%",
+    padding: 15,
+    borderRadius: 12,
+    border: "none",
+    background: "linear-gradient(90deg,#E8C547,#C79A17)",
+    color: "#111",
+    fontWeight: "bold",
+    fontSize: 16,
+    cursor: "pointer",
+  },
+
+  bottom: {
+    textAlign: "center",
+    marginTop: 30,
+    color: "#999",
+  },
+
+  register: {
+    marginLeft: 8,
+    color: "#E8C547",
+    textDecoration: "none",
+    fontWeight: "bold",
+  },
 };
 
 export default Login;
