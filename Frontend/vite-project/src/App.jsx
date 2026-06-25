@@ -21,6 +21,17 @@ import FeaturedProducts from "./pages/FeaturedProducts";
 import About from "./pages/About";
 import FlashSale from "./pages/FlashSale";
 
+
+import Dashboard from "./admin/pages/Dashboard";
+import Products from "./admin/pages/Products";
+import AddProduct from "./admin/pages/AddProduct";
+import Orders from "./admin/pages/Orders";
+import Users from "./admin/pages/Users";
+import Reviews from "./admin/pages/Reviews";
+import Categories from "./admin/pages/Categories";
+import Coupons from "./admin/pages/Coupons";
+import Settings from "./admin/pages/Settings";
+
 function App() {
   return (
     <>
@@ -44,6 +55,26 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/flash-sale" element={<FlashSale />} />
         <Route path="*" element={<NotFound />} />
+
+        <Route path="/admin" element={<Dashboard />} />
+
+        <Route path="/admin/products" element={<Products />} />
+
+        <Route path="/admin/add-product" element={<AddProduct />} />
+
+        <Route path="/admin/orders" element={<Orders />} />
+
+        <Route path="/admin/users" element={<Users />} />
+
+        <Route path="/admin/reviews" element={<Reviews />} />
+
+        <Route path="/admin/categories" element={<Categories />} />
+
+        <Route path="/admin/coupons" element={<Coupons />} />
+
+        <Route path="/admin/settings" element={<Settings />} />
+
+        
       </Routes>
       <BackToTop />
       <LiveChat />

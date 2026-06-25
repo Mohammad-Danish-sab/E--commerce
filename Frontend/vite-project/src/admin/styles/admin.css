@@ -1,0 +1,60 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+.sidebar{
+    width:260px;
+    height:100vh;
+    background:#0f172a;
+    position:fixed;
+    left:0;
+    top:0;
+    color:white;
+    display:flex;
+    flex-direction:column;
+    border-right:1px solid rgba(255,255,255,.08);
+}
+
+.logo{
+    padding:30px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.logo h2{
+    color:#FFD700;
+    font-size:28px;
+}
+
+.logo span{
+    color:#9ca3af;
+    font-size:14px;
+}
+
+nav{
+    display:flex;
+    flex-direction:column;
+    margin-top:20px;
+}
+
+.menu{
+    display:flex;
+    align-items:center;
+    gap:15px;
+    padding:15px 30px;
+    color:#d1d5db;
+    text-decoration:none;
+    transition:.3s;
+}
+
+.menu:hover{
+    background:#1e293b;
+    color:white;
+}
+
+.active{
+    background:#FFD700;
+    color:black;
+    font-weight:bold;
+}
