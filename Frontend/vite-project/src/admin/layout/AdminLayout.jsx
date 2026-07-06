@@ -9,6 +9,8 @@ const AdminLayout = ({ children }) => {
       <div className="main-content">
         <Navbar />
 
+        <SalesChart />
+
         <div className="page-content">{children}</div>
       </div>
     </div>

@@ -223,3 +223,27 @@ font-size:28px;
 
 }
 
+
+.chart{
+
+margin-top:40px;
+
+background:#111827;
+
+padding:30px;
+
+border-radius:20px;
+
+border:1px solid rgba(255,255,255,.05);
+
+}
+
+.chart h2{
+
+margin-bottom:20px;
+
+color:white;
+
+}
+
+
