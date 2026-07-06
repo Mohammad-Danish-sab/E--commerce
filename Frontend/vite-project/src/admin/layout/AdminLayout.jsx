@@ -1,18 +1,15 @@
 import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 
 const AdminLayout = ({ children }) => {
   return (
-    <div style={{ display: "flex" }}>
+    <div className="admin-layout">
       <Sidebar />
 
-      <div
-        style={{
-          marginLeft: "260px",
-          width: "100%",
-          padding: "30px",
-        }}
-      >
-        {children}
+      <div className="main-content">
+        <Navbar />
+
+        <div className="page-content">{children}</div>
       </div>
     </div>
   );
